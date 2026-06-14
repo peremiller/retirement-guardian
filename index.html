@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Retirement Guardian</title>
+<style>
+  :root{
+    --bg:#0c1322; --panel:#131d31; --panel2:#1a263e; --line:#27344f;
+    --ink:#e8eef9; --muted:#90a0bd; --brand:#4f8cff; --brand2:#36d1a0;
+    --warn:#ffb454; --bad:#ff6b6b; --good:#36d1a0;
+    --shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%,#16284a 0%,transparent 60%),var(--bg);
+    color:var(--ink); line-height:1.5; min-height:100vh;
+  }
+  header{
+    padding:26px 22px 18px; max-width:1080px; margin:0 auto;
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,var(--brand),var(--brand2));
+    display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:var(--shadow)}
+  h1{font-size:24px;margin:0;letter-spacing:-.3px}
+  .sub{color:var(--muted);font-size:13.5px;margin-top:2px}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 22px 60px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 22px}
+  .tab{padding:10px 16px;border-radius:11px;border:1px solid var(--line);background:var(--panel);
+    color:var(--muted);cursor:pointer;font-size:14px;font-weight:600;transition:.15s}
+  .tab:hover{color:var(--ink);border-color:#36476b}
+  .tab.active{background:linear-gradient(135deg,rgba(79,140,255,.22),rgba(54,209,160,.18));
+    color:var(--ink);border-color:var(--brand)}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:var(--shadow)}
+  .panel + .panel{margin-top:18px}
+  h2{font-size:18px;margin:0 0 4px}
+  .lead{color:var(--muted);font-size:14px;margin:0 0 18px}
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:1fr 1fr 1fr}
+  @media(max-width:720px){.g2,.g3{grid-template-columns:1fr}}
+  label{display:block;font-size:12.5px;color:var(--muted);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
+  input,select{width:100%;padding:11px 12px;border-radius:10px;border:1px solid var(--line);
+    background:var(--panel2);color:var(--ink);font-size:14px;font-family:inherit}
+  input:focus,select:focus{outline:none;border-color:var(--brand)}
+  .btn{padding:11px 18px;border-radius:10px;border:0;font-weight:700;font-size:14px;cursor:pointer;
+    background:linear-gradient(135deg,var(--brand),#3a6fe0);color:#fff;transition:.15s}
+  .btn:hover{filter:brightness(1.08)}
+  .btn.ghost{background:var(--panel2);border:1px solid var(--line);color:var(--ink)}
+  .btn.sm{padding:7px 12px;font-size:12.5px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .chk{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;border:1px solid var(--line);
+    border-radius:10px;background:var(--panel2);cursor:pointer;font-size:13.5px;color:var(--ink)}
+  .chk input{width:auto;margin-top:2px;flex:0 0 auto}
+  .chk small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
+  .pill.good{background:rgba(54,209,160,.14);color:var(--good)}
+  .pill.warn{background:rgba(255,180,84,.14);color:var(--warn)}
+  .pill.bad{background:rgba(255,107,107,.14);color:var(--bad)}
+  .card{border:1px solid var(--line);border-radius:13px;padding:16px;background:var(--panel2);margin-top:14px}
+  .card h3{margin:0;font-size:16px}
+  .meta{color:var(--muted);font-size:13px;margin-top:2px}
+  .flags{margin-top:12px;display:flex;flex-direction:column;gap:7px}
+  .flag{font-size:13px;display:flex;gap:8px;align-items:flex-start}
+  .bar{height:9px;border-radius:99px;background:#22304c;overflow:hidden;margin-top:8px}
+  .bar > span{display:block;height:100%;border-radius:99px;transition:width .4s}
+  .empty{color:var(--muted);font-size:14px;text-align:center;padding:26px;border:1px dashed var(--line);border-radius:12px}
+  .stat{background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:16px}
+  .stat .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+  .stat .v{font-size:26px;font-weight:800;margin-top:4px;letter-spacing:-.5px}
+  .stat .d{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .scn{border:1px solid var(--line);border-radius:13px;padding:16px;background:var(--panel2)}
+  .scn.best{border-color:var(--good);box-shadow:0 0 0 1px rgba(54,209,160,.35)}
+  .scn h4{margin:0 0 2px;font-size:15px}
+  .scn .age{color:var(--muted);font-size:12.5px}
+  .scn .res{font-size:22px;font-weight:800;margin:10px 0 2px;letter-spacing:-.4px}
+  .note{font-size:12.5px;color:var(--muted);margin-top:14px;padding:12px;border-left:3px solid var(--brand);
+    background:rgba(79,140,255,.07);border-radius:0 10px 10px 0}
+  .del{color:var(--bad);background:transparent;border:0;cursor:pointer;font-size:13px;font-weight:700}
+  .tag{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:8px}
+  table{width:100%;border-collapse:collapse;margin-top:6px}
+  td{padding:7px 0;font-size:13.5px;border-bottom:1px solid var(--line)}
+  td:last-child{text-align:right;font-weight:700}
+  .disclaimer{font-size:12px;color:var(--muted);text-align:center;margin-top:26px;line-height:1.6}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">🛡️</div>
+    <div>
+      <h1>Retirement Guardian</h1>
+      <div class="sub">Vet advisors · designate trusted contacts · pressure-test your timeline</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tabs">
+    <div class="tab active" data-tab="advisors">1 · Advisor Vetting</div>
+    <div class="tab" data-tab="contacts">2 · Trusted Contact &amp; Successor</div>
+    <div class="tab" data-tab="timeline">3 · Retirement Timeline</div>
+  </div>
+
+  <!-- ============ TAB 1: ADVISOR VETTING ============ -->
+  <section id="advisors" class="tabpane">
+    <div class="panel">
+      <h2>Vet an advisor before you sign</h2>
+      <p class="lead">Capture the fee structure and fiduciary status, then work through the due-diligence checklist.
+        Guardian computes a readiness score and will warn you before you sign anything.</p>
+
+      <div class="grid g2">
+        <div><label>Advisor / firm name</label><input id="a_name" placeholder="e.g. Jane Cruz — Northstar Advisors" /></div>
+        <div><label>Primary contact / email</label><input id="a_contact" placeholder="jane@northstar.com" /></div>
+      </div>
+      <div class="grid g2" style="margin-top:14px">
+        <div>
+          <label>Fee structure</label>
+          <select id="a_fee">
+            <option value="">Select…</option>
+            <option value="flat">Flat / retainer fee</option>
+            <option value="hourly">Hourly</option>
+            <option value="aum">% of assets (AUM)</option>
+            <option value="commission">Commission-based</option>
+            <option value="mixed">Mixed (fee + commission)</option>
+          </select>
+        </div>
+        <div>
+          <label>Fee detail (rate / amount)</label>
+          <input id="a_feedetail" placeholder="e.g. 1.0% AUM, or $3,000 flat" />
+        </div>
+      </div>
+      <div class="grid g2" style="margin-top:14px">
+        <div>
+          <label>Fiduciary status</label>
+          <select id="a_fid">
+            <option value="">Select…</option>
+            <option value="always">Fiduciary at all times (RIA)</option>
+            <option value="sometimes">Fiduciary only on advice (dual-registered)</option>
+            <option value="suitability">Suitability standard only (broker)</option>
+            <option value="unknown">Not disclosed / unsure</option>
+          </select>
+        </div>
+        <div>
+          <label>Will they put it in writing?</label>
+          <select id="a_written">
+            <option value="">Select…</option>
+            <option value="yes">Yes — written fiduciary oath</option>
+            <option value="no">No / refused</option>
+            <option value="na">Haven't asked yet</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tag" style="margin-top:20px">Due-diligence checklist</div>
+      <div class="grid g2">
+        <label class="chk"><input type="checkbox" class="dd" data-w="2" /><span>Verified on SEC IAPD / FINRA BrokerCheck<small>No undisclosed disclosures or disputes</small></span></label>
+        <label class="chk"><input type="checkbox" class="dd" data-w="2" /><span>Reviewed Form ADV Part 2 / Form CRS<small>Services, conflicts, disciplinary history</small></span></label>
+        <label class="chk"><input type="checkbox" class="dd" data-w="2" /><span>All fees disclosed in writing<small>Including fund / product / platform fees</small></span></label>
+        <label class="chk"><input type="checkbox" class="dd" data-w="1" /><span>Conflicts of interest disclosed<small>Proprietary products, referral payments</small></span></label>
+        <label class="chk"><input type="checkbox" class="dd" data-w="1" /><span>Checked 2+ client references<small>Especially clients near your situation</small></span></label>
+        <label class="chk"><input type="checkbox" class="dd" data-w="1" /><span>Read the agreement &amp; exit terms<small>Termination, transfer, custody of assets</small></span></label>
+      </div>
+
+      <div class="row" style="margin-top:18px">
+        <button class="btn" id="a_save">Save &amp; score advisor</button>
+        <span class="meta" id="a_live"></span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="row" style="justify-content:space-between;align-items:flex-start">
+        <div>
+          <h2>Vetted advisors</h2>
+          <p class="lead" style="margin-bottom:0">Green means cleared to sign. Anything else means open items remain.</p>
+        </div>
+        <button class="btn ghost sm" id="a_export">⤓ Export scorecards (PDF)</button>
+      </div>
+      <div id="a_list" style="margin-top:16px"></div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 2: TRUSTED CONTACT & SUCCESSOR ============ -->
+  <section id="contacts" class="tabpane" style="display:none">
+    <div class="panel">
+      <h2>Trusted contact &amp; successor advisor</h2>
+      <p class="lead">A <b>trusted contact</b> is someone your custodian may reach if they suspect diminished capacity
+        or can't reach you (FINRA Rule 4512). A <b>successor advisor</b> is who steps in to manage the plan if your
+        primary advisor — or you — becomes incapacitated. Designate both now, while you can.</p>
+
+      <div class="tag">Trusted contact person</div>
+      <div class="grid g3">
+        <div><label>Full name</label><input id="t_name" placeholder="Maria Perez" /></div>
+        <div><label>Relationship</label><input id="t_rel" placeholder="Sister" /></div>
+        <div><label>Phone</label><input id="t_phone" placeholder="+1 …" /></div>
+      </div>
+      <div class="grid g2" style="margin-top:14px">
+        <div><label>Email</label><input id="t_email" placeholder="maria@email.com" /></div>
+        <div><label>May discuss account specifics?</label>
+          <select id="t_auth">
+            <option value="limited">Limited — health/whereabouts only</option>
+            <option value="full">Full — may discuss account details</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tag" style="margin-top:22px">Successor advisor (incapacity backup)</div>
+      <div class="grid g3">
+        <div><label>Successor advisor / firm</label><input id="s_name" placeholder="Northstar Continuity Team" /></div>
+        <div><label>Phone</label><input id="s_phone" placeholder="+1 …" /></div>
+        <div><label>Trigger to activate</label>
+          <select id="s_trigger">
+            <option value="incapacity">Documented incapacity</option>
+            <option value="death">Death of primary advisor</option>
+            <option value="both">Either incapacity or advisor exit</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid g2" style="margin-top:14px">
+        <div><label>Durable POA / health proxy on file?</label>
+          <select id="s_poa">
+            <option value="no">Not yet</option>
+            <option value="poa">Financial POA in place</option>
+            <option value="both">Financial POA + healthcare proxy</option>
+          </select>
+        </div>
+        <div><label>Where documents are stored</label><input id="s_docs" placeholder="e.g. fireproof safe + custodian portal" /></div>
+      </div>
+
+      <div class="row" style="margin-top:18px">
+        <button class="btn" id="c_save">Save designations</button>
+        <button class="btn ghost" id="c_print">Print summary</button>
+      </div>
+
+      <div id="c_summary"></div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 3: RETIREMENT TIMELINE ============ -->
+  <section id="timeline" class="tabpane" style="display:none">
+    <div class="panel">
+      <h2>Pressure-test your retirement date</h2>
+      <p class="lead">Delaying full retirement by even two to three years can dramatically improve plan sustainability —
+        more years of contributions and growth, fewer years of withdrawals, and a larger Social Security benefit.
+        Enter your numbers to see the difference.</p>
+
+      <div class="grid g3">
+        <div><label>Current age</label><input type="number" id="r_age" value="62" /></div>
+        <div><label>Planned retirement age</label><input type="number" id="r_ret" value="65" /></div>
+        <div><label>Plan through age</label><input type="number" id="r_end" value="92" /></div>
+      </div>
+      <div class="grid g3" style="margin-top:14px">
+        <div><label>Current savings ($)</label><input type="number" id="r_savings" value="650000" /></div>
+        <div><label>Annual contribution ($)</label><input type="number" id="r_contrib" value="30000" /></div>
+        <div><label>Expected return (%)</label><input type="number" id="r_return" value="6" step="0.1" /></div>
+      </div>
+      <div class="grid g3" style="margin-top:14px">
+        <div><label>Annual spending in retirement ($)</label><input type="number" id="r_spend" value="62000" /></div>
+        <div><label>Social Security at planned age ($/yr)</label><input type="number" id="r_ss" value="30000" /></div>
+        <div><label>Inflation (%)</label><input type="number" id="r_infl" value="2.5" step="0.1" /></div>
+      </div>
+
+      <div class="tag" style="margin-top:22px">Taxes, RMDs &amp; market risk</div>
+      <div class="grid g3">
+        <div><label>Tax-deferred portion of savings (%)</label><input type="number" id="r_td" value="70" /></div>
+        <div><label>Effective tax rate on withdrawals (%)</label><input type="number" id="r_tax" value="18" /></div>
+        <div><label>Return volatility (% std dev)</label><input type="number" id="r_vol" value="11" step="0.5" /></div>
+      </div>
+      <div class="grid g3" style="margin-top:14px">
+        <div><label>Apply RMDs (age 73+)</label>
+          <select id="r_rmd"><option value="yes">Yes — SECURE 2.0</option><option value="no">No</option></select>
+        </div>
+        <div><label>Monte Carlo simulations</label>
+          <select id="r_sims"><option>2000</option><option selected>1000</option><option>500</option></select>
+        </div>
+        <div><label>&nbsp;</label><button class="btn" id="r_run" style="width:100%">Run Monte Carlo comparison</button></div>
+      </div>
+    </div>
+
+    <div id="r_out"></div>
+  </section>
+
+  <div class="disclaimer">
+    Retirement Guardian is an educational planning tool, not financial, legal, or tax advice.
+    Figures are simplified deterministic projections. Verify advisor credentials directly at
+    adviserinfo.sec.gov and brokercheck.finra.org, and consult a qualified fiduciary before acting.
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const money = n => '$' + Math.round(n).toLocaleString();
+const store = {
+  get:(k,d)=>{try{return JSON.parse(localStorage.getItem('rg_'+k))??d}catch(e){return d}},
+  set:(k,v)=>localStorage.setItem('rg_'+k,JSON.stringify(v))
+};
+
+/* ---------- Tabs ---------- */
+$$('.tab').forEach(t=>t.onclick=()=>{
+  $$('.tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  $$('.tabpane').forEach(p=>p.style.display='none');
+  $('#'+t.dataset.tab).style.display='';
+});
+
+/* ---------- 1. Advisor vetting ---------- */
+function scoreAdvisor(a){
+  let score=0, max=0, flags=[];
+  // checklist weighting (total weight 9)
+  a.checks.forEach(c=>{max+=c.w; if(c.on)score+=c.w;});
+  const pctChecks = max? score/max : 0;
+
+  // fiduciary scoring
+  const fidScore = {always:1, sometimes:.6, suitability:.2, unknown:0, '':0}[a.fid]??0;
+  // fee transparency
+  const feeOk = a.fee && a.fee!=='commission';
+
+  // red / amber flags
+  if(a.fid==='suitability') flags.push(['bad','Held to suitability standard only — not a fiduciary. They can recommend products that merely "suit" you, not what is best for you.']);
+  if(a.fid==='unknown'||!a.fid) flags.push(['bad','Fiduciary status not confirmed. Ask them to state it in writing before signing.']);
+  if(a.fid==='sometimes') flags.push(['warn','Dual-registered — fiduciary only when giving advice, broker when selling. Clarify which hat they wear and when.']);
+  if(a.fee==='commission') flags.push(['warn','Commission-based pay creates a conflict: they earn more by selling more. Ask how they are compensated on every product.']);
+  if(a.fee==='mixed') flags.push(['warn','Mixed fee + commission — get a full written fee breakdown including embedded product fees.']);
+  if(a.written==='no') flags.push(['bad','Refused to put fiduciary commitment in writing — a serious red flag.']);
+  if(a.written!=='yes') flags.push(['warn','No written fiduciary oath on file yet — request one.']);
+  a.checks.filter(c=>!c.on).forEach(c=>flags.push(['warn','Open item: '+c.label]));
+
+  const overall = Math.round((pctChecks*0.55 + fidScore*0.30 + (feeOk?0.15:0))*100);
+  const hardFail = a.fid==='suitability'||a.fid==='unknown'||!a.fid||a.written==='no'
+                   || a.checks.some(c=>c.w===2 && !c.on);
+  let status = 'bad', label='Not ready to sign';
+  if(!hardFail && overall>=80){status='good';label='Cleared — safe to sign';}
+  else if(!hardFail && overall>=55){status='warn';label='Proceed with caution';}
+  return {overall,status,label,flags};
+}
+
+const checkDefs = ()=>$$('.dd').map(c=>({
+  label:c.parentElement.querySelector('span').childNodes[0].textContent.trim(),
+  w:+c.dataset.w, on:c.checked
+}));
+
+function liveScore(){
+  const a={fee:$('#a_fee').value,fid:$('#a_fid').value,written:$('#a_written').value,checks:checkDefs()};
+  const r=scoreAdvisor(a);
+  $('#a_live').innerHTML = `Live readiness: <b style="color:var(--${r.status})">${r.overall}% — ${r.label}</b>`;
+}
+$$('#a_fee,#a_fid,#a_written').forEach(el=>el.onchange=liveScore);
+$$('.dd').forEach(el=>el.onchange=liveScore);
+liveScore();
+
+$('#a_save').onclick=()=>{
+  const name=$('#a_name').value.trim();
+  if(!name){alert('Enter an advisor or firm name first.');return;}
+  const a={
+    id:Date.now(), name, contact:$('#a_contact').value.trim(),
+    fee:$('#a_fee').value, feedetail:$('#a_feedetail').value.trim(),
+    fid:$('#a_fid').value, written:$('#a_written').value, checks:checkDefs()
+  };
+  const list=store.get('advisors',[]); list.unshift(a); store.set('advisors',list);
+  ['a_name','a_contact','a_feedetail'].forEach(i=>$('#'+i).value='');
+  ['a_fee','a_fid','a_written'].forEach(i=>$('#'+i).value='');
+  $$('.dd').forEach(c=>c.checked=false); liveScore();
+  renderAdvisors();
+};
+
+const feeLabel={flat:'Flat / retainer',hourly:'Hourly',aum:'% of assets (AUM)',commission:'Commission',mixed:'Mixed','':'—'};
+const fidLabel={always:'Full fiduciary (RIA)',sometimes:'Dual-registered',suitability:'Suitability only',unknown:'Undisclosed','':'—'};
+
+function renderAdvisors(){
+  const list=store.get('advisors',[]); const el=$('#a_list');
+  if(!list.length){el.innerHTML='<div class="empty">No advisors vetted yet. Fill out the form above to score your first one.</div>';return;}
+  el.innerHTML=list.map(a=>{
+    const r=scoreAdvisor(a);
+    return `<div class="card">
+      <div class="row" style="justify-content:space-between;align-items:flex-start">
+        <div>
+          <h3>${esc(a.name)}</h3>
+          <div class="meta">${a.contact?esc(a.contact)+' · ':''}${feeLabel[a.fee]||'—'}${a.feedetail?' ('+esc(a.feedetail)+')':''} · ${fidLabel[a.fid]||'—'}</div>
+        </div>
+        <span class="pill ${r.status}">${r.status==='good'?'✓':r.status==='warn'?'!':'✕'} ${r.label}</span>
+      </div>
+      <div class="bar"><span style="width:${r.overall}%;background:var(--${r.status})"></span></div>
+      <div class="meta" style="margin-top:6px">Readiness score: <b>${r.overall}%</b></div>
+      ${r.flags.length?`<div class="flags">${r.flags.slice(0,6).map(f=>
+        `<div class="flag"><span class="pill ${f[0]}" style="flex:0 0 auto">${f[0]==='bad'?'Red':'Check'}</span><span>${esc(f[1])}</span></div>`).join('')}</div>`:''}
+      <div class="row" style="margin-top:12px"><button class="del" data-del="${a.id}">Remove</button></div>
+    </div>`;
+  }).join('');
+  $$('[data-del]').forEach(b=>b.onclick=()=>{
+    store.set('advisors',store.get('advisors',[]).filter(x=>x.id!=b.dataset.del));renderAdvisors();
+  });
+}
+renderAdvisors();
+
+$('#a_export').onclick=()=>{
+  const list=store.get('advisors',[]);
+  if(!list.length){alert('No advisors to export yet. Score at least one first.');return;}
+  const statusWord={good:'CLEARED TO SIGN',warn:'PROCEED WITH CAUTION',bad:'NOT READY'};
+  const statusCol={good:'#0a8a5f',warn:'#b8730a',bad:'#c0392b'};
+  const rows=list.map(a=>{
+    const r=scoreAdvisor(a);
+    return `<div style="border:1px solid #ddd;border-radius:10px;padding:16px;margin-bottom:14px;page-break-inside:avoid">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <h3 style="margin:0;font-size:17px">${esc(a.name)}</h3>
+        <span style="font-weight:800;color:${statusCol[r.status]}">${r.overall}% · ${statusWord[r.status]}</span>
+      </div>
+      <div style="color:#555;font-size:13px;margin:6px 0 10px">
+        ${a.contact?esc(a.contact)+' &nbsp;·&nbsp; ':''}Fee: ${feeLabel[a.fee]||'—'}${a.feedetail?' ('+esc(a.feedetail)+')':''}
+        &nbsp;·&nbsp; ${fidLabel[a.fid]||'—'}</div>
+      ${r.flags.length
+        ? '<div style="font-size:12px;font-weight:700;color:#777;text-transform:uppercase;letter-spacing:.4px">Open items &amp; flags</div><ul style="font-size:13px;color:#333;margin:6px 0 0;padding-left:18px">'
+          +r.flags.map(f=>'<li style="margin-bottom:3px;color:'+(f[0]==='bad'?'#c0392b':'#333')+'">'+esc(f[1])+'</li>').join('')+'</ul>'
+        : '<div style="color:#0a8a5f;font-size:13px;font-weight:600">✓ No outstanding flags — all due-diligence checks complete.</div>'}
+    </div>`;
+  }).join('');
+  const w=window.open('','_blank');
+  w.document.write('<title>Advisor Scorecards</title><body style="font-family:-apple-system,Segoe UI,Arial,sans-serif;padding:32px;color:#111;max-width:760px;margin:0 auto">'
+    +'<h2 style="margin:0 0 2px">Retirement Guardian — Advisor Scorecards</h2>'
+    +'<div style="color:#888;font-size:12px;margin-bottom:20px">Due-diligence summary · '+list.length+' advisor'+(list.length>1?'s':'')+'</div>'
+    +rows
+    +'<div style="color:#999;font-size:11px;margin-top:20px;border-top:1px solid #eee;padding-top:12px">Educational tool, not financial or legal advice. Verify credentials at adviserinfo.sec.gov and brokercheck.finra.org.</div>'
+    +'</body>');
+  w.document.close();
+  setTimeout(()=>w.print(),300);
+};
+
+/* ---------- 2. Trusted contact / successor ---------- */
+function loadContacts(){
+  const c=store.get('contacts',null); if(!c)return;
+  ['t_name','t_rel','t_phone','t_email','t_auth','s_name','s_phone','s_trigger','s_poa','s_docs'].forEach(k=>{
+    if(c[k]!==undefined)$('#'+k).value=c[k];
+  });
+  renderSummary(c);
+}
+$('#c_save').onclick=()=>{
+  const c={};
+  ['t_name','t_rel','t_phone','t_email','t_auth','s_name','s_phone','s_trigger','s_poa','s_docs'].forEach(k=>c[k]=$('#'+k).value.trim?$('#'+k).value.trim():$('#'+k).value);
+  store.set('contacts',c); renderSummary(c);
+};
+const trigLabel={incapacity:'Documented incapacity',death:'Death of primary advisor',both:'Incapacity or advisor exit'};
+const poaLabel={no:'⚠️ None on file yet',poa:'Financial POA in place',both:'Financial POA + healthcare proxy'};
+function renderSummary(c){
+  if(!c.t_name && !c.s_name){$('#c_summary').innerHTML='';return;}
+  $('#c_summary').innerHTML=`<div class="card" id="printcard">
+    <div class="tag">Designation summary</div>
+    <table>
+      <tr><td>Trusted contact</td><td>${esc(c.t_name||'—')}${c.t_rel?' ('+esc(c.t_rel)+')':''}</td></tr>
+      <tr><td>Contact reachable at</td><td>${esc(c.t_phone||'—')}${c.t_email?' · '+esc(c.t_email):''}</td></tr>
+      <tr><td>Disclosure authority</td><td>${c.t_auth==='full'?'Full account details':'Health / whereabouts only'}</td></tr>
+      <tr><td>Successor advisor</td><td>${esc(c.s_name||'—')}${c.s_phone?' · '+esc(c.s_phone):''}</td></tr>
+      <tr><td>Activation trigger</td><td>${trigLabel[c.s_trigger]||'—'}</td></tr>
+      <tr><td>Power of attorney</td><td>${poaLabel[c.s_poa]||'—'}</td></tr>
+      <tr><td>Documents stored</td><td>${esc(c.s_docs||'—')}</td></tr>
+    </table>
+    ${c.s_poa==='no'?'<div class="note">No durable power of attorney on file. Without one, a court conservatorship may be required before anyone can act on your behalf. Consider establishing a financial POA and healthcare proxy.</div>':''}
+  </div>`;
+}
+$('#c_print').onclick=()=>{
+  const card=$('#printcard'); if(!card){alert('Save your designations first.');return;}
+  const w=window.open('','_blank');
+  w.document.write('<title>Designation Summary</title><body style="font-family:sans-serif;padding:30px;color:#111">'
+    +'<h2>Retirement Guardian — Designation Summary</h2>'+card.innerHTML.replace(/var\(--[^)]+\)/g,'#444')+'</body>');
+  w.document.close(); w.print();
+};
+loadContacts();
+
+/* ---------- 3. Retirement timeline ---------- */
+// IRS Uniform Lifetime Table divisors (SECURE 2.0, RMDs begin at 73)
+const RMD={73:26.5,74:25.5,75:24.6,76:23.7,77:22.9,78:22.0,79:21.1,80:20.2,81:19.4,82:18.5,
+  83:17.7,84:16.8,85:16.0,86:15.2,87:14.4,88:13.7,89:12.9,90:12.2,91:11.5,92:10.8,93:10.1,
+  94:9.5,95:8.9,96:8.4,97:7.8,98:7.3,99:6.8,100:6.4};
+const rmdDiv=age=>RMD[age]||Math.max(2,6.4-(age-100)*0.3);
+
+// Box–Muller normal draw
+function gauss(mean,sd){
+  let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random();
+  return mean + sd*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+}
+
+// One projection path. nextReturn() supplies each year's return (constant or random).
+// Models two buckets: tax-deferred (taxed on withdrawal + RMDs) and after-tax (taxable/Roth).
+function runPath(p, retAge, nextReturn){
+  let td = p.savings*p.tdFrac;          // tax-deferred (401k/IRA)
+  let other = p.savings*(1-p.tdFrac);   // taxable / Roth (after-tax)
+  const yearsToRet=Math.max(0,retAge-p.age);
+  for(let i=0;i<yearsToRet;i++){
+    const r=nextReturn();
+    td = td*(1+r) + p.contrib*p.tdFrac;
+    other = other*(1+r) + p.contrib*(1-p.tdFrac);
+  }
+  const ssDelta=Math.pow(1.08, retAge-p.baseRet); // ~8%/yr delayed-claiming credit
+  let ss=p.ss*ssDelta, spend=p.spend, depleted=null;
+  for(let age=retAge; age<p.end; age++){
+    let need=Math.max(0, spend-ss); // net after-tax need
+    // Required Minimum Distribution from tax-deferred
+    if(p.rmd && age>=73 && td>0){
+      const rmd=td/rmdDiv(age), net=rmd*(1-p.tax);
+      td-=rmd;
+      if(net>=need){ other+=(net-need); need=0; } else { need-=net; }
+    }
+    // meet remaining need: after-tax bucket first (no tax)…
+    if(need>0){ const t=Math.min(other,need); other-=t; need-=t; }
+    // …then tax-deferred, grossed up for tax
+    if(need>0 && td>0){ const gross=need/(1-p.tax), take=Math.min(td,gross); td-=take; need-=take*(1-p.tax); }
+    if(need>0.01){ depleted=age; break; }
+    const r=nextReturn();
+    td*=(1+r); other*=(1+r);
+    spend*=(1+p.infl); ss*=(1+p.infl);
+  }
+  return {depleted, endBalance:Math.max(0,td+other), retAge, ss:p.ss*ssDelta, yearsToRet};
+}
+
+function monteCarlo(p, retAge, sims){
+  let success=0; const ends=[];
+  for(let s=0;s<sims;s++){
+    const path=runPath(p,retAge, ()=>Math.max(-0.9, gauss(p.ret,p.vol)));
+    if(!path.depleted) success++;
+    ends.push(path.endBalance);
+  }
+  ends.sort((a,b)=>a-b);
+  const q=x=>ends[Math.floor(x*(ends.length-1))];
+  return {successRate:success/sims, median:q(.5), p10:q(.1), p90:q(.9)};
+}
+
+$('#r_run').onclick=()=>{
+  const v=id=>+$('#'+id).value;
+  const base={
+    age:v('r_age'), baseRet:v('r_ret'), end:v('r_end'),
+    savings:v('r_savings'), contrib:v('r_contrib'), ret:v('r_return')/100,
+    spend:v('r_spend'), ss:v('r_ss'), infl:v('r_infl')/100,
+    tdFrac:Math.min(1,Math.max(0,v('r_td')/100)), tax:Math.min(.6,Math.max(0,v('r_tax')/100)),
+    vol:Math.max(0,v('r_vol')/100), rmd:$('#r_rmd').value==='yes'
+  };
+  const sims=+$('#r_sims').value;
+  const ages=[base.baseRet, base.baseRet+2, base.baseRet+3];
+  const res=ages.map(a=>{
+    const det=runPath(base,a, ()=>base.ret);   // deterministic median-return path
+    const mc=monteCarlo(base,a,sims);
+    return {...det, mc};
+  });
+  const bestVal=Math.max(...res.map(r=>r.mc.successRate));
+
+  const sc=p=> p>=.85?'good' : p>=.70?'warn' : 'bad';
+  const out=$('#r_out');
+  out.innerHTML=`
+  <div class="panel">
+    <h2>Plan sustainability by retirement age</h2>
+    <p class="lead">${sims.toLocaleString()} Monte Carlo simulations per scenario — randomizing yearly returns
+      around your expected return and volatility — plus tax-deferred withdrawals, your effective tax rate, and
+      RMDs from age 73. <b>Success probability</b> is the share of simulations that fund spending through age ${base.end}.</p>
+    <div class="grid g3">
+      ${res.map((r,i)=>{
+        const best=r.mc.successRate===bestVal;
+        const pc=Math.round(r.mc.successRate*100), col=sc(r.mc.successRate);
+        const det = r.depleted? `Median path runs out at ${r.depleted}` : `Median path funded through ${base.end} ✓`;
+        return `<div class="scn ${best?'best':''}">
+          ${best?'<span class="pill good" style="margin-bottom:8px">Most sustainable</span>':''}
+          <h4>Retire at ${r.retAge}${i===0?' (your plan)':' · +'+(r.retAge-base.baseRet)+' yrs'}</h4>
+          <div class="age">${r.yearsToRet} more working yrs · SS ≈ ${money(r.ss)}/yr</div>
+          <div class="res" style="color:var(--${col})">${pc}% success</div>
+          <div class="bar"><span style="width:${pc}%;background:var(--${col})"></span></div>
+          <div class="meta" style="margin-top:8px">${det}</div>
+          <div class="meta">Median end balance: ${money(r.mc.median)}</div>
+          <div class="meta">Tough market (10th pct): ${r.mc.p10>0?money(r.mc.p10):'$0 — depleted'}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    ${buildVerdict(res,base)}
+    <div class="note">Why delay helps so much: you add more contributions and let them compound, you remove
+      two to three of your most expensive early-retirement withdrawal years, and Social Security grows roughly
+      8% for each year you delay claiming (up to age 70). These effects stack — and a higher success probability
+      means more of them survive bad markets, taxes, and RMDs.</div>
+  </div>`;
+};
+
+function buildVerdict(res,base){
+  const plan=res[0], delay3=res[2];
+  const p0=Math.round(plan.mc.successRate*100), p3=Math.round(delay3.mc.successRate*100);
+  const lift=p3-p0;
+  const balGain=delay3.mc.median-plan.mc.median;
+  let msg;
+  if(p0>=85){
+    msg=`Your plan as entered already succeeds in <b>${p0}%</b> of simulations. Delaying to age
+      <b>${delay3.retAge}</b> pushes that to <b>${p3}%</b> and lifts your median ending balance by about
+      <b>${money(Math.max(0,balGain))}</b> — a thicker cushion against weak markets, taxes, and longevity.`;
+  } else if(p3>=85){
+    msg=`Your current plan succeeds only <b>${p0}%</b> of the time — uncomfortably fragile. Delaying retirement to
+      age <b>${delay3.retAge}</b> raises the success probability to <b>${p3}%</b> (a <b>${lift}-point</b> jump),
+      turning a shaky plan into a resilient one. That's the dramatic sustainability gain from a 2–3 year delay.`;
+  } else {
+    msg=`Delaying from ${plan.retAge} to ${delay3.retAge} lifts your success probability from <b>${p0}%</b> to
+      <b>${p3}%</b> (+${lift} points). It helps meaningfully, but you're still below a comfortable success rate —
+      consider also trimming spending, saving more, or revisiting your investment mix.`;
+  }
+  return `<div class="stat" style="margin-top:16px"><div class="k">Verdict</div><div class="d" style="font-size:14px;margin-top:8px;color:var(--ink)">${msg}</div></div>`;
+}
+
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+$('#r_run').click();
+</script>
+</body>
+</html>
