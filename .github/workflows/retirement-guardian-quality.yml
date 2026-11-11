@@ -1,0 +1,108 @@
+name: Retirement Guardian Offline and Accessible Browser QA
+
+on:
+  push:
+    paths:
+      - "index.html"
+      - "sw.js"
+      - "offline-assets.json"
+      - "scripts/build-offline.py"
+      - ".github/workflows/retirement-guardian-quality.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify canonical offline build
+        run: |
+          python3 scripts/build-offline.py
+          git diff --exit-code -- index.html sw.js offline-assets.json
+      - name: Parse the application and check accessible labels
+        run: |
+          node - <<'JS'
+          const fs = require('node:fs');
+          const assert = require('node:assert/strict');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const inline = html.match(/<script>([\s\S]*?)<\/script>/);
+          assert(inline, 'Guardian inline app script');
+          new Function(inline[1]);
+          for (const id of ['a_name','a_contact','a_fee','a_feedetail','a_fid','a_written',
+            't_name','t_rel','t_phone','t_email','t_auth','s_name','s_phone','s_trigger',
+            's_poa','s_docs','r_age','r_ret','r_end','r_savings','r_contrib','r_return',
+            'r_spend','r_ss','r_infl','r_td','r_tax','r_vol','r_rmd','r_sims']) {
+            assert(html.includes('for="'+id+'"'), 'Missing accessible label for '+id);
+          }
+          assert.equal((html.match(/role="tabpanel"/g)||[]).length, 3);
+          assert(html.includes('restoreGuardianTabFromUrl'));
+          assert(html.includes("localStorage.getItem('rg_'+k)"));
+          assert(html.includes("localStorage.setItem('rg_'+k"));
+          JS
+      - name: Install real Chromium UI dependencies
+        run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Start static site
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/guardian-http.log 2>&1 &
+      - name: Test live local-browser keyboard, tabs, values, responsive and offline
+        run: |
+          node - <<'JS'
+          const assert = require('node:assert/strict');
+          const {chromium} = require('playwright');
+          (async () => {
+            const browser = await chromium.launch({headless: true});
+            try {
+              for(const [width,scheme] of [[320,'dark'],[390,'light'],[1280,'dark']]){
+                const page = await browser.newPage({viewport:{width,height:820},colorScheme:scheme});
+                const errors=[];
+                page.on('pageerror',e=>errors.push(String(e)));
+                await page.goto('http://127.0.0.1:8765/#contacts');
+                await page.locator('#contacts').waitFor({state:'visible'});
+                assert.equal(await page.locator('#tab-contacts').getAttribute('aria-selected'),'true');
+                assert.equal(await page.locator('#tab-advisors').getAttribute('aria-selected'),'false');
+                const unlabeled = await page.locator('input,select').evaluateAll(els=>
+                  els.filter(el=>!el.labels?.length).map(el=>el.id));
+                assert.deepEqual(unlabeled,[], 'Unlabelled form controls '+width);
+                await page.locator('#t_name').fill('Example Contact');
+                await page.locator('#tab-timeline').click();
+                assert.equal(new URL(page.url()).hash,'#timeline');
+                await page.locator('#timeline').waitFor({state:'visible'});
+                await page.goBack();
+                await page.locator('#contacts').waitFor({state:'visible'});
+                assert.equal(await page.locator('#t_name').inputValue(),'Example Contact',
+                  'Tab change must not reset draft fields');
+                await page.locator('#tab-contacts').focus();
+                await page.keyboard.press('ArrowRight');
+                assert.equal(await page.locator('#tab-timeline').getAttribute('aria-selected'),'true');
+                assert.equal(await page.locator('#tab-timeline').evaluate(el=>document.activeElement===el),true);
+                await page.keyboard.press('Home');
+                assert.equal(await page.locator('#tab-advisors').getAttribute('aria-selected'),'true');
+                await page.locator('#tab-contacts').hover();
+                await page.locator('#tab-contacts').click();
+                assert.equal(await page.locator('#tab-contacts').getAttribute('aria-selected'),'true');
+                const overflow = await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
+                assert(overflow<=1,'Unexpected horizontal page overflow '+width+': '+overflow);
+                await page.goto('http://127.0.0.1:8765/');
+                await page.keyboard.press('Tab');
+                assert(await page.locator('.skip-link').evaluate(el=>document.activeElement===el),
+                  'Keyboard skip link must be first');
+                const outline=await page.locator('.skip-link').evaluate(el=>getComputedStyle(el).outlineStyle);
+                assert.notEqual(outline,'none','Visible keyboard focus');
+                assert.deepEqual(errors,[],'No browser page errors '+width);
+                await page.close();
+              }
+            } finally { await browser.close(); }
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          JS
