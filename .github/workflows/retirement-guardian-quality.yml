@@ -96,11 +96,14 @@ jobs:
                 assert.equal(await page.locator('#tab-contacts').getAttribute('aria-selected'),'true');
                 const overflow = await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
                 assert(overflow<=1,'Unexpected horizontal page overflow '+width+': '+overflow);
-                await page.goto('http://127.0.0.1:8765/');
-                await page.keyboard.press('Tab');
-                assert(await page.locator('.skip-link').evaluate(el=>document.activeElement===el),
+                // A fresh tab avoids carrying focus from a prior hash-navigation test.
+                const skipPage = await browser.newPage({viewport:{width,height:820},colorScheme:scheme});
+                await skipPage.goto('http://127.0.0.1:8765/');
+                await skipPage.keyboard.press('Tab');
+                assert(await skipPage.locator('.skip-link').evaluate(el=>document.activeElement===el),
                   'Keyboard skip link must be first');
-                const outline=await page.locator('.skip-link').evaluate(el=>getComputedStyle(el).outlineStyle);
+                const outline=await skipPage.locator('.skip-link').evaluate(el=>getComputedStyle(el).outlineStyle);
+                await skipPage.close();
                 assert.notEqual(outline,'none','Visible keyboard focus');
                 assert.deepEqual(errors,[],'No browser page errors '+width);
                 await page.close();
