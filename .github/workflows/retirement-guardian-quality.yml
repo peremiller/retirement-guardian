@@ -45,6 +45,8 @@ jobs:
             assert(html.includes('for="'+id+'"'), 'Missing accessible label for '+id);
           }
           assert.equal((html.match(/role="tabpanel"/g)||[]).length, 3);
+          assert(html.includes("const guardianTabs = $('.tab');"), 'Tab controls must be collected with querySelectorAll');
+          assert(html.includes("$('.tabpane').forEach"), 'All tabpanels must be toggled, not only the first');
           assert(html.includes('restoreGuardianTabFromUrl'));
           assert(html.includes("localStorage.getItem('rg_'+k)"));
           assert(html.includes("localStorage.setItem('rg_'+k"));
