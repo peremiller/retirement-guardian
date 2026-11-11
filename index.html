@@ -86,9 +86,18 @@
   td{padding:7px 0;font-size:13.5px;border-bottom:1px solid var(--line)}
   td:last-child{text-align:right;font-weight:700}
   .disclaimer{font-size:12px;color:var(--muted);text-align:center;margin-top:26px;line-height:1.6}
+
+  /* WCAG keyboard visibility and small touch targets without changing the app theme. */
+  .skip-link { position:absolute; top:-70px; left:12px; z-index:100; background:var(--ink); color:var(--bg); padding:10px 14px; border-radius:8px; }
+  .skip-link:focus { top:10px; }
+  :where(button, input, select, [tabindex="0"]):focus-visible { outline:3px solid var(--brand2); outline-offset:3px; }
+  .tabs .tab { font-family:inherit; }
+  [hidden] { display:none !important; }
+  @media(max-width:440px){ .tabs .tab { flex:1 1 100%; text-align:left; } .wrap{padding-left:14px;padding-right:14px;} .panel{padding:16px;} }
 </style>
 <meta name="offline-limits" content="Saved pages and local tools work offline. External links and live services need internet."><link rel="manifest" href="manifest.webmanifest"><script data-offline-client src="offline-client.js" defer></script></head>
 <body>
+<a class="skip-link" href="#main-content">Skip to main content</a>
 <header>
   <div class="brand">
     <div class="logo"><img src="favicon.svg" alt="" aria-hidden="true"></div>
@@ -99,27 +108,27 @@
   </div>
 </header>
 
-<div class="wrap">
-  <div class="tabs">
-    <div class="tab active" data-tab="advisors">1 · Advisor Vetting</div>
-    <div class="tab" data-tab="contacts">2 · Trusted Contact &amp; Successor</div>
-    <div class="tab" data-tab="timeline">3 · Retirement Timeline</div>
-  </div>
+<main class="wrap" id="main-content">
+  <nav class="tabs" role="tablist" aria-label="Retirement Guardian sections">
+    <button type="button" class="tab active" role="tab" id="tab-advisors" aria-controls="advisors" aria-selected="true" data-tab="advisors">1 · Advisor Vetting</button>
+    <button type="button" class="tab" role="tab" id="tab-contacts" aria-controls="contacts" aria-selected="false" data-tab="contacts">2 · Trusted Contact &amp; Successor</button>
+    <button type="button" class="tab" role="tab" id="tab-timeline" aria-controls="timeline" aria-selected="false" data-tab="timeline">3 · Retirement Timeline</button>
+  </nav>
 
   <!-- ============ TAB 1: ADVISOR VETTING ============ -->
-  <section id="advisors" class="tabpane">
+  <section id="advisors" class="tabpane" role="tabpanel" aria-labelledby="tab-advisors" tabindex="0">
     <div class="panel">
       <h2>Vet an advisor before you sign</h2>
       <p class="lead">Capture the fee structure and fiduciary status, then work through the due-diligence checklist.
         Guardian computes a readiness score and will warn you before you sign anything.</p>
 
       <div class="grid g2">
-        <div><label>Advisor / firm name</label><input id="a_name" placeholder="e.g. Jane Cruz — Northstar Advisors" /></div>
-        <div><label>Primary contact / email</label><input id="a_contact" placeholder="jane@northstar.com" /></div>
+        <div><label for="a_name">Advisor / firm name</label><input id="a_name" placeholder="e.g. Jane Cruz — Northstar Advisors" /></div>
+        <div><label for="a_contact">Primary contact / email</label><input id="a_contact" placeholder="jane@northstar.com" /></div>
       </div>
       <div class="grid g2" style="margin-top:14px">
         <div>
-          <label>Fee structure</label>
+          <label for="a_fee">Fee structure</label>
           <select id="a_fee">
             <option value="">Select…</option>
             <option value="flat">Flat / retainer fee</option>
@@ -130,13 +139,13 @@
           </select>
         </div>
         <div>
-          <label>Fee detail (rate / amount)</label>
+          <label for="a_feedetail">Fee detail (rate / amount)</label>
           <input id="a_feedetail" placeholder="e.g. 1.0% AUM, or ₱150,000 flat" />
         </div>
       </div>
       <div class="grid g2" style="margin-top:14px">
         <div>
-          <label>Fiduciary status</label>
+          <label for="a_fid">Fiduciary status</label>
           <select id="a_fid">
             <option value="">Select…</option>
             <option value="always">Fiduciary at all times (RIA)</option>
@@ -146,7 +155,7 @@
           </select>
         </div>
         <div>
-          <label>Will they put it in writing?</label>
+          <label for="a_written">Will they put it in writing?</label>
           <select id="a_written">
             <option value="">Select…</option>
             <option value="yes">Yes — written fiduciary oath</option>
@@ -185,7 +194,7 @@
   </section>
 
   <!-- ============ TAB 2: TRUSTED CONTACT & SUCCESSOR ============ -->
-  <section id="contacts" class="tabpane" style="display:none">
+  <section id="contacts" class="tabpane" role="tabpanel" aria-labelledby="tab-contacts" tabindex="0" style="display:none">
     <div class="panel">
       <h2>Trusted contact &amp; successor advisor</h2>
       <p class="lead">A <b>trusted contact</b> is someone your custodian may reach if they suspect diminished capacity
@@ -194,13 +203,13 @@
 
       <div class="tag">Trusted contact person</div>
       <div class="grid g3">
-        <div><label>Full name</label><input id="t_name" placeholder="Maria Perez" /></div>
-        <div><label>Relationship</label><input id="t_rel" placeholder="Sister" /></div>
-        <div><label>Phone</label><input id="t_phone" placeholder="+1 …" /></div>
+        <div><label for="t_name">Full name</label><input id="t_name" placeholder="Maria Perez" /></div>
+        <div><label for="t_rel">Relationship</label><input id="t_rel" placeholder="Sister" /></div>
+        <div><label for="t_phone">Phone</label><input id="t_phone" placeholder="+1 …" /></div>
       </div>
       <div class="grid g2" style="margin-top:14px">
-        <div><label>Email</label><input id="t_email" placeholder="maria@email.com" /></div>
-        <div><label>May discuss account specifics?</label>
+        <div><label for="t_email">Email</label><input id="t_email" placeholder="maria@email.com" /></div>
+        <div><label for="t_auth">May discuss account specifics?</label>
           <select id="t_auth">
             <option value="limited">Limited — health/whereabouts only</option>
             <option value="full">Full — may discuss account details</option>
@@ -210,9 +219,9 @@
 
       <div class="tag" style="margin-top:22px">Successor advisor (incapacity backup)</div>
       <div class="grid g3">
-        <div><label>Successor advisor / firm</label><input id="s_name" placeholder="Northstar Continuity Team" /></div>
-        <div><label>Phone</label><input id="s_phone" placeholder="+1 …" /></div>
-        <div><label>Trigger to activate</label>
+        <div><label for="s_name">Successor advisor / firm</label><input id="s_name" placeholder="Northstar Continuity Team" /></div>
+        <div><label for="s_phone">Phone</label><input id="s_phone" placeholder="+1 …" /></div>
+        <div><label for="s_trigger">Trigger to activate</label>
           <select id="s_trigger">
             <option value="incapacity">Documented incapacity</option>
             <option value="death">Death of primary advisor</option>
@@ -221,14 +230,14 @@
         </div>
       </div>
       <div class="grid g2" style="margin-top:14px">
-        <div><label>Durable POA / health proxy on file?</label>
+        <div><label for="s_poa">Durable POA / health proxy on file?</label>
           <select id="s_poa">
             <option value="no">Not yet</option>
             <option value="poa">Financial POA in place</option>
             <option value="both">Financial POA + healthcare proxy</option>
           </select>
         </div>
-        <div><label>Where documents are stored</label><input id="s_docs" placeholder="e.g. fireproof safe + custodian portal" /></div>
+        <div><label for="s_docs">Where documents are stored</label><input id="s_docs" placeholder="e.g. fireproof safe + custodian portal" /></div>
       </div>
 
       <div class="row" style="margin-top:18px">
@@ -241,7 +250,7 @@
   </section>
 
   <!-- ============ TAB 3: RETIREMENT TIMELINE ============ -->
-  <section id="timeline" class="tabpane" style="display:none">
+  <section id="timeline" class="tabpane" role="tabpanel" aria-labelledby="tab-timeline" tabindex="0" style="display:none">
     <div class="panel">
       <h2>Pressure-test your retirement date</h2>
       <p class="lead">Delaying full retirement by even two to three years can dramatically improve plan sustainability —
@@ -249,35 +258,35 @@
         Enter your numbers to see the difference.</p>
 
       <div class="grid g3">
-        <div><label>Current age</label><input type="number" id="r_age" value="62" /></div>
-        <div><label>Planned retirement age</label><input type="number" id="r_ret" value="65" /></div>
-        <div><label>Plan through age</label><input type="number" id="r_end" value="92" /></div>
+        <div><label for="r_age">Current age</label><input type="number" id="r_age" value="62" /></div>
+        <div><label for="r_ret">Planned retirement age</label><input type="number" id="r_ret" value="65" /></div>
+        <div><label for="r_end">Plan through age</label><input type="number" id="r_end" value="92" /></div>
       </div>
       <div class="grid g3" style="margin-top:14px">
-        <div><label>Current savings (₱)</label><input type="number" id="r_savings" value="20000000" /></div>
-        <div><label>Annual contribution (₱)</label><input type="number" id="r_contrib" value="1000000" /></div>
-        <div><label>Expected return (%)</label><input type="number" id="r_return" value="6" step="0.1" /></div>
+        <div><label for="r_savings">Current savings (₱)</label><input type="number" id="r_savings" value="20000000" /></div>
+        <div><label for="r_contrib">Annual contribution (₱)</label><input type="number" id="r_contrib" value="1000000" /></div>
+        <div><label for="r_return">Expected return (%)</label><input type="number" id="r_return" value="6" step="0.1" /></div>
       </div>
       <div class="grid g3" style="margin-top:14px">
-        <div><label>Annual spending in retirement (₱)</label><input type="number" id="r_spend" value="1400000" /></div>
-        <div><label>SSS / pension at planned age (₱/yr)</label><input type="number" id="r_ss" value="300000" /></div>
-        <div><label>Inflation (%)</label><input type="number" id="r_infl" value="2.5" step="0.1" /></div>
+        <div><label for="r_spend">Annual spending in retirement (₱)</label><input type="number" id="r_spend" value="1400000" /></div>
+        <div><label for="r_ss">SSS / pension at planned age (₱/yr)</label><input type="number" id="r_ss" value="300000" /></div>
+        <div><label for="r_infl">Inflation (%)</label><input type="number" id="r_infl" value="2.5" step="0.1" /></div>
       </div>
 
       <div class="tag" style="margin-top:22px">Taxes, RMDs &amp; market risk</div>
       <div class="grid g3">
-        <div><label>Tax-deferred portion of savings (%)</label><input type="number" id="r_td" value="70" /></div>
-        <div><label>Effective tax rate on withdrawals (%)</label><input type="number" id="r_tax" value="18" /></div>
-        <div><label>Return volatility (% std dev)</label><input type="number" id="r_vol" value="11" step="0.5" /></div>
+        <div><label for="r_td">Tax-deferred portion of savings (%)</label><input type="number" id="r_td" value="70" /></div>
+        <div><label for="r_tax">Effective tax rate on withdrawals (%)</label><input type="number" id="r_tax" value="18" /></div>
+        <div><label for="r_vol">Return volatility (% std dev)</label><input type="number" id="r_vol" value="11" step="0.5" /></div>
       </div>
       <div class="grid g3" style="margin-top:14px">
-        <div><label>Apply RMDs (age 73+)</label>
+        <div><label for="r_rmd">Apply RMDs (age 73+)</label>
           <select id="r_rmd"><option value="yes">Yes — SECURE 2.0</option><option value="no">No</option></select>
         </div>
-        <div><label>Monte Carlo simulations</label>
+        <div><label for="r_sims">Monte Carlo simulations</label>
           <select id="r_sims"><option>2000</option><option selected>1000</option><option>500</option></select>
         </div>
-        <div><label>&nbsp;</label><button class="btn" id="r_run" style="width:100%">Run Monte Carlo comparison</button></div>
+        <div><span aria-hidden="true" style="display:block;height:1.4rem"></span><button class="btn" id="r_run" style="width:100%">Run Monte Carlo comparison</button></div>
       </div>
     </div>
 
@@ -289,7 +298,7 @@
     Figures are simplified deterministic projections. Verify advisor credentials directly at
     adviserinfo.sec.gov and brokercheck.finra.org, and consult a qualified fiduciary before acting.
   </div>
-</div>
+</main>
 
 <script>
 const $ = s => document.querySelector(s);
@@ -300,13 +309,44 @@ const store = {
   set:(k,v)=>localStorage.setItem('rg_'+k,JSON.stringify(v))
 };
 
-/* ---------- Tabs ---------- */
-$$('.tab').forEach(t=>t.onclick=()=>{
-  $$('.tab').forEach(x=>x.classList.remove('active'));
-  t.classList.add('active');
-  $$('.tabpane').forEach(p=>p.style.display='none');
-  $('#'+t.dataset.tab).style.display='';
+/* ---------- Tabs: native buttons, keyboard, deep links and history ---------- */
+const guardianTabs = $('.tab');
+const guardianTabIds = new Set(guardianTabs.map(t => t.dataset.tab));
+function activateGuardianTab(id, updateHistory=false) {
+  if (!guardianTabIds.has(id)) return;
+  guardianTabs.forEach(tab => {
+    const active = tab.dataset.tab === id;
+    tab.classList.toggle('active', active);
+    tab.setAttribute('aria-selected', String(active));
+    tab.tabIndex = active ? 0 : -1;
+  });
+  $('.tabpane').forEach(panel => {
+    const active = panel.id === id;
+    panel.hidden = !active;
+    panel.style.display = active ? '' : 'none';
+  });
+  if (updateHistory && location.hash !== '#' + id)
+    history.pushState(null, '', '#' + id);
+}
+guardianTabs.forEach((tab, index) => {
+  tab.addEventListener('click', () => activateGuardianTab(tab.dataset.tab, true));
+  tab.addEventListener('keydown', event => {
+    const next = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? (index+1)%guardianTabs.length
+      : event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? (index+guardianTabs.length-1)%guardianTabs.length
+      : event.key === 'Home' ? 0 : event.key === 'End' ? guardianTabs.length-1 : -1;
+    if (next < 0) return;
+    event.preventDefault();
+    guardianTabs[next].focus();
+    activateGuardianTab(guardianTabs[next].dataset.tab, true);
+  });
 });
+function restoreGuardianTabFromUrl() {
+  const id = decodeURIComponent(location.hash.slice(1));
+  activateGuardianTab(guardianTabIds.has(id) ? id : 'advisors');
+}
+window.addEventListener('popstate', restoreGuardianTabFromUrl);
+window.addEventListener('hashchange', restoreGuardianTabFromUrl);
+restoreGuardianTabFromUrl();
 
 /* ---------- 1. Advisor vetting ---------- */
 function scoreAdvisor(a){
@@ -334,7 +374,7 @@ function scoreAdvisor(a){
   const hardFail = a.fid==='suitability'||a.fid==='unknown'||!a.fid||a.written==='no'
                    || a.checks.some(c=>c.w===2 && !c.on);
   let status = 'bad', label='Not ready to sign';
-  if(!hardFail && overall>=80){status='good';label='Cleared — safe to sign';}
+  if(!hardFail && overall>=80){status='good';label='Checklist passed — verify independently';}
   else if(!hardFail && overall>=55){status='warn';label='Proceed with caution';}
   return {overall,status,label,flags};
 }
