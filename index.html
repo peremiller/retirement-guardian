@@ -310,7 +310,7 @@ const store = {
 };
 
 /* ---------- Tabs: native buttons, keyboard, deep links and history ---------- */
-const guardianTabs = $('.tab');
+const guardianTabs = $$('.tab');
 const guardianTabIds = new Set(guardianTabs.map(t => t.dataset.tab));
 function activateGuardianTab(id, updateHistory=false) {
   if (!guardianTabIds.has(id)) return;
@@ -320,7 +320,7 @@ function activateGuardianTab(id, updateHistory=false) {
     tab.setAttribute('aria-selected', String(active));
     tab.tabIndex = active ? 0 : -1;
   });
-  $('.tabpane').forEach(panel => {
+  $$('.tabpane').forEach(panel => {
     const active = panel.id === id;
     panel.hidden = !active;
     panel.style.display = active ? '' : 'none';
