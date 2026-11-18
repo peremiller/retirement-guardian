@@ -115,6 +115,8 @@
     <button type="button" class="tab" role="tab" id="tab-timeline" aria-controls="timeline" aria-selected="false" data-tab="timeline">3 · Retirement Timeline</button>
   </nav>
 
+  <div id="storage-warning" class="note" role="alert" hidden></div>
+
   <!-- ============ TAB 1: ADVISOR VETTING ============ -->
   <section id="advisors" class="tabpane" role="tabpanel" aria-labelledby="tab-advisors" tabindex="0">
     <div class="panel">
@@ -304,9 +306,35 @@
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const money = n => '₱' + Math.round(n).toLocaleString();
+function warnAboutBrowserStorage() {
+  const note = $('#storage-warning');
+  note.textContent = 'Saved browser records could not be read or updated. Existing stored records were not replaced; check browser storage permissions before saving.';
+  note.hidden = false;
+}
+function savedRecordHasExpectedShape(k, value) {
+  if (k === 'advisors') return Array.isArray(value)
+    && value.every(item => item && typeof item === 'object' && Array.isArray(item.checks));
+  if (k === 'contacts') return value !== null && typeof value === 'object' && !Array.isArray(value);
+  return true;
+}
 const store = {
-  get:(k,d)=>{try{return JSON.parse(localStorage.getItem('rg_'+k))??d}catch(e){return d}},
-  set:(k,v)=>localStorage.setItem('rg_'+k,JSON.stringify(v))
+  get:(k,d)=>{
+    try {
+      const raw = localStorage.getItem('rg_'+k);
+      if (raw === null) return d;
+      const value = JSON.parse(raw);
+      if (!savedRecordHasExpectedShape(k,value)) throw new Error('Unexpected stored record');
+      return value;
+    } catch (error) { warnAboutBrowserStorage(); return d; }
+  },
+  set:(k,v)=>{
+    try {
+      const raw = localStorage.getItem('rg_'+k);
+      if (raw !== null && !savedRecordHasExpectedShape(k,JSON.parse(raw))) throw new Error('Unexpected stored record');
+      localStorage.setItem('rg_'+k,JSON.stringify(v));
+      return true;
+    } catch (error) { warnAboutBrowserStorage(); return false; }
+  }
 };
 
 /* ---------- Tabs: native buttons, keyboard, deep links and history ---------- */
@@ -401,7 +429,8 @@ $('#a_save').onclick=()=>{
     fee:$('#a_fee').value, feedetail:$('#a_feedetail').value.trim(),
     fid:$('#a_fid').value, written:$('#a_written').value, checks:checkDefs()
   };
-  const list=store.get('advisors',[]); list.unshift(a); store.set('advisors',list);
+  const list=store.get('advisors',[]); list.unshift(a);
+  if(!store.set('advisors',list)) return;
   ['a_name','a_contact','a_feedetail'].forEach(i=>$('#'+i).value='');
   ['a_fee','a_fid','a_written'].forEach(i=>$('#'+i).value='');
   $$('.dd').forEach(c=>c.checked=false); liveScore();
@@ -432,7 +461,7 @@ function renderAdvisors(){
     </div>`;
   }).join('');
   $$('[data-del]').forEach(b=>b.onclick=()=>{
-    store.set('advisors',store.get('advisors',[]).filter(x=>x.id!=b.dataset.del));renderAdvisors();
+    if(store.set('advisors',store.get('advisors',[]).filter(x=>x.id!=b.dataset.del))) renderAdvisors();
   });
 }
 renderAdvisors();
@@ -480,7 +509,7 @@ function loadContacts(){
 $('#c_save').onclick=()=>{
   const c={};
   ['t_name','t_rel','t_phone','t_email','t_auth','s_name','s_phone','s_trigger','s_poa','s_docs'].forEach(k=>c[k]=$('#'+k).value.trim?$('#'+k).value.trim():$('#'+k).value);
-  store.set('contacts',c); renderSummary(c);
+  if(store.set('contacts',c)) renderSummary(c);
 };
 const trigLabel={incapacity:'Documented incapacity',death:'Death of primary advisor',both:'Incapacity or advisor exit'};
 const poaLabel={no:'⚠️ None on file yet',poa:'Financial POA in place',both:'Financial POA + healthcare proxy'};
