@@ -48,6 +48,7 @@ jobs:
           assert(html.includes("const guardianTabs = $$('.tab');"), 'Tab controls must be collected with querySelectorAll');
           assert(html.includes("$$('.tabpane').forEach"), 'All tabpanels must be toggled, not only the first');
           assert(html.includes('restoreGuardianTabFromUrl'));
+          assert(html.includes('aria-label="Remove advisor ${esc(a.name)}"'), 'Advisor remove buttons must identify each saved record');
           assert(html.includes("localStorage.getItem('rg_'+k)"));
           assert(html.includes("localStorage.setItem('rg_'+k"));
           JS
@@ -100,6 +101,12 @@ jobs:
                 await page.locator('#tab-contacts').hover();
                 await page.locator('#tab-contacts').click();
                 assert.equal(await page.locator('#tab-contacts').getAttribute('aria-selected'),'true');
+                await page.locator('#tab-advisors').click();
+                await page.locator('#a_name').fill('A & "B"');
+                await page.locator('#a_save').click();
+                assert.equal(await page.locator('#a_list [data-del]').first().getAttribute('aria-label'), 'Remove advisor A & "B"');
+                await page.locator('#a_list [data-del]').first().click();
+                assert.equal(await page.locator('#a_list [data-del]').count(),0,'Removing the test advisor should preserve an empty saved list');
                 const overflow = await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
                 assert(overflow<=1,'Unexpected horizontal page overflow '+width+': '+overflow);
                 // A fresh tab avoids carrying focus from a prior hash-navigation test.
