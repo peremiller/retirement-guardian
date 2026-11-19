@@ -48,6 +48,7 @@ jobs:
           assert(html.includes("const guardianTabs = $$('.tab');"), 'Tab controls must be collected with querySelectorAll');
           assert(html.includes("$$('.tabpane').forEach"), 'All tabpanels must be toggled, not only the first');
           assert(html.includes('restoreGuardianTabFromUrl'));
+          assert(html.includes('aria-label="Remove advisor ${esc(a.name)}"'), 'Advisor remove buttons must identify each saved record');
           assert(html.includes("localStorage.getItem('rg_'+k)"));
           assert(html.includes("localStorage.setItem('rg_'+k"));
           JS
@@ -100,6 +101,12 @@ jobs:
                 await page.locator('#tab-contacts').hover();
                 await page.locator('#tab-contacts').click();
                 assert.equal(await page.locator('#tab-contacts').getAttribute('aria-selected'),'true');
+                await page.locator('#tab-advisors').click();
+                await page.locator('#a_name').fill('A & "B"');
+                await page.locator('#a_save').click();
+                assert.equal(await page.locator('#a_list [data-del]').first().getAttribute('aria-label'), 'Remove advisor A & "B"');
+                await page.locator('#a_list [data-del]').first().click();
+                assert.equal(await page.locator('#a_list [data-del]').count(),0,'Removing the test advisor should preserve an empty saved list');
                 const overflow = await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
                 assert(overflow<=1,'Unexpected horizontal page overflow '+width+': '+overflow);
                 // A fresh tab avoids carrying focus from a prior hash-navigation test.
@@ -115,5 +122,50 @@ jobs:
                 await page.close();
               }
             } finally { await browser.close(); }
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          JS
+      - name: Test browser record recovery without overwriting stored data
+        run: |
+          python3 -m http.server 8766 --bind 127.0.0.1 >/tmp/guardian-storage-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS -o /dev/null http://127.0.0.1:8766/; then break; fi
+            sleep 0.25
+          done
+          curl -fsS -o /dev/null http://127.0.0.1:8766/
+          node - <<'JS'
+          const assert = require('node:assert/strict');
+          const {chromium} = require('playwright');
+          (async () => {
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage({viewport:{width:390,height:800}});
+              const errors=[];
+              page.on('pageerror',e=>errors.push(String(e)));
+              await page.goto('http://127.0.0.1:8766/');
+              await page.evaluate(()=>localStorage.setItem('rg_advisors','{unreadable'));
+              await page.reload();
+              await page.locator('#storage-warning').waitFor({state:'visible'});
+              await page.locator('#a_name').fill('Unsaved advisor');
+              await page.locator('#a_save').click();
+              assert.equal(await page.evaluate(()=>localStorage.getItem('rg_advisors')),'{unreadable');
+              assert.equal(await page.locator('#a_name').inputValue(),'Unsaved advisor');
+              await page.goto('http://127.0.0.1:8766/#contacts');
+              await page.evaluate(()=>localStorage.setItem('rg_contacts','{unreadable'));
+              await page.reload();
+              await page.locator('#t_name').fill('Unsaved contact');
+              await page.locator('#c_save').click();
+              assert.equal(await page.evaluate(()=>localStorage.getItem('rg_contacts')),'{unreadable');
+              assert.equal(await page.locator('#t_name').inputValue(),'Unsaved contact');
+              await page.evaluate(()=>{
+                localStorage.removeItem('rg_contacts');
+                Storage.prototype.setItem=function(){throw new DOMException('Storage quota','QuotaExceededError');};
+              });
+              await page.locator('#c_save').click();
+              assert.equal(await page.evaluate(()=>localStorage.getItem('rg_contacts')),null);
+              assert.deepEqual(errors,[],'No browser errors on storage failure');
+              await page.close();
+            } finally {await browser.close();}
           })().catch(e=>{console.error(e);process.exitCode=1;});
           JS
